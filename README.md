@@ -4,7 +4,7 @@ This npm workspace separates the reusable autosave implementation from its examp
 
 ```text
 packages/rhf-autosave/  Publishable React Hook Form autosave package
-demo/                   Vite, React Router, Redux, and RTK Query example
+demo/                   ID-based case-management application example
 ```
 
 The package provides section-based autosave using:
@@ -34,6 +34,8 @@ npm run dev
 ```
 
 Then open the Vite URL and edit either section. The mock API waits ~650ms so the save-state transitions are visible.
+
+The demo routes each record under `/applications/:applicationId/:section` and includes two isolated application IDs. Personal and employment demonstrate nested values and varied controls; household and education demonstrate complete-section autosave with React Hook Form `useFieldArray()` collections. RTK Query cache tags include both the application ID and section name.
 
 `npm run build` builds the package first and then verifies that the demo consumes its public exports.
 

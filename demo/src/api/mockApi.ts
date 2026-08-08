@@ -1,21 +1,66 @@
 export type PersonalForm = {
   firstName: string;
+  middleName: string;
   lastName: string;
   email: string;
+  phone: string;
+  dateOfBirth: string;
+  preferredContact: "email" | "phone";
+  address: {
+    line1: string;
+    line2: string;
+    city: string;
+    region: string;
+    postalCode: string;
+  };
 };
 
 export type EmploymentForm = {
+  status: "employed" | "self-employed" | "student" | "not-employed";
   employer: string;
   title: string;
-  years: number;
+  startDate: string;
+  annualIncome: number;
+  remote: boolean;
+  responsibilities: string;
 };
 
-type Database = {
+export type HouseholdForm = {
+  maritalStatus: string;
+  housingStatus: string;
+  members: Array<{
+    id: string;
+    name: string;
+    relationship: string;
+    dateOfBirth: string;
+    dependent: boolean;
+  }>;
+};
+
+export type EducationForm = {
+  highestLevel: string;
+  currentlyStudying: boolean;
+  entries: Array<{
+    id: string;
+    institution: string;
+    qualification: string;
+    fieldOfStudy: string;
+    graduationYear: number;
+  }>;
+};
+
+export type ApplicationRecord = {
+  id: string;
+  reference: string;
+  applicantName: string;
+  status: "In progress" | "Ready for review";
   personal: PersonalForm;
   employment: EmploymentForm;
+  household: HouseholdForm;
+  education: EducationForm;
 };
 
-const STORAGE_KEY = "rhf-autosave-production:data";
+const STORAGE_KEY = "rhf-autosave-demo:applications-v2";
 
 const sleep = (ms: number, signal?: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
@@ -30,72 +75,139 @@ const sleep = (ms: number, signal?: AbortSignal) =>
     );
   });
 
-const initialDatabase = {
+const createApplication = (
+  id: string,
+  reference: string,
+  firstName: string,
+  lastName: string,
+): ApplicationRecord => ({
+  id,
+  reference,
+  applicantName: `${firstName} ${lastName}`,
+  status: "In progress",
   personal: {
-    firstName: "Ada",
-    lastName: "Lovelace",
-    email: "ada@example.com",
-  } satisfies PersonalForm,
+    firstName,
+    middleName: "",
+    lastName,
+    email: `${firstName.toLowerCase()}@example.com`,
+    phone: "+1 415 555 0142",
+    dateOfBirth: "1990-06-15",
+    preferredContact: "email",
+    address: {
+      line1: "12 Market Street",
+      line2: "",
+      city: "San Francisco",
+      region: "CA",
+      postalCode: "94105",
+    },
+  },
   employment: {
+    status: "employed",
     employer: "Analytical Engines Inc.",
-    title: "Engineer",
-    years: 5,
-  } satisfies EmploymentForm,
-} satisfies Database;
+    title: "Senior Engineer",
+    startDate: "2021-03-01",
+    annualIncome: 128000,
+    remote: true,
+    responsibilities: "Lead platform delivery and mentor the engineering team.",
+  },
+  household: {
+    maritalStatus: "single",
+    housingStatus: "rent",
+    members: [{
+      id: crypto.randomUUID(),
+      name: `${firstName} ${lastName}`,
+      relationship: "Self",
+      dateOfBirth: "1990-06-15",
+      dependent: false,
+    }],
+  },
+  education: {
+    highestLevel: "bachelors",
+    currentlyStudying: false,
+    entries: [{
+      id: crypto.randomUUID(),
+      institution: "University of London",
+      qualification: "Bachelor of Science",
+      fieldOfStudy: "Computer Science",
+      graduationYear: 2012,
+    }],
+  },
+});
 
-const isDatabase = (value: unknown): value is Database => {
-  if (!value || typeof value !== "object") return false;
-
-  const candidate = value as Partial<Database>;
-  return (
-    typeof candidate.personal?.firstName === "string" &&
-    typeof candidate.personal.lastName === "string" &&
-    typeof candidate.personal.email === "string" &&
-    typeof candidate.employment?.employer === "string" &&
-    typeof candidate.employment.title === "string" &&
-    typeof candidate.employment.years === "number"
-  );
+const initialDatabase: Record<string, ApplicationRecord> = {
+  "app-1042": createApplication("app-1042", "RH-2026-1042", "Ada", "Lovelace"),
+  "app-2077": createApplication("app-2077", "RH-2026-2077", "Grace", "Hopper"),
 };
 
-const loadDatabase = (): Database => {
+const loadDatabase = (): Record<string, ApplicationRecord> => {
   try {
     const stored = globalThis.localStorage?.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed: unknown = JSON.parse(stored);
-      if (isDatabase(parsed)) return parsed;
-    }
+    if (stored) return JSON.parse(stored) as Record<string, ApplicationRecord>;
   } catch {
-    // Use the defaults when storage is unavailable or contains invalid JSON.
+    // Fall back to seeded demo records.
   }
-
   return structuredClone(initialDatabase);
 };
 
-const persistDatabase = (database: Database) => {
+let database = loadDatabase();
+
+const getApplication = (applicationId: string) => {
+  const application = database[applicationId];
+  if (!application) throw new Error(`Application ${applicationId} was not found`);
+  return application;
+};
+
+type SectionName = "personal" | "employment" | "household" | "education";
+
+const updateSection = async <K extends SectionName>(
+  applicationId: string,
+  section: K,
+  values: ApplicationRecord[K],
+  signal: AbortSignal,
+) => {
+  await sleep(650, signal);
+  database = {
+    ...database,
+    [applicationId]: {
+      ...getApplication(applicationId),
+      [section]: structuredClone(values),
+    },
+  };
   globalThis.localStorage?.setItem(STORAGE_KEY, JSON.stringify(database));
 };
 
-let db = loadDatabase();
-
 export const api = {
-  async getPersonal() {
+  async getSummary(applicationId: string) {
+    await sleep(150);
+    const { id, reference, applicantName, status } = getApplication(applicationId);
+    return { id, reference, applicantName, status };
+  },
+  async getPersonal(applicationId: string) {
     await sleep(250);
-    return structuredClone(db.personal);
+    return structuredClone(getApplication(applicationId).personal);
   },
-  async savePersonal(data: PersonalForm, signal: AbortSignal) {
-    await sleep(650, signal);
-    const next = { ...db, personal: structuredClone(data) };
-    persistDatabase(next);
-    db = next;
+  savePersonal(applicationId: string, values: PersonalForm, signal: AbortSignal) {
+    return updateSection(applicationId, "personal", values, signal);
   },
-  async getEmployment() {
+  async getEmployment(applicationId: string) {
     await sleep(250);
-    return structuredClone(db.employment);
+    return structuredClone(getApplication(applicationId).employment);
   },
-  async saveEmployment(data: EmploymentForm, signal: AbortSignal) {
-    await sleep(650, signal);
-    const next = { ...db, employment: structuredClone(data) };
-    persistDatabase(next);
-    db = next;
+  saveEmployment(applicationId: string, values: EmploymentForm, signal: AbortSignal) {
+    return updateSection(applicationId, "employment", values, signal);
+  },
+  async getHousehold(applicationId: string) {
+    await sleep(250);
+    return structuredClone(getApplication(applicationId).household);
+  },
+  saveHousehold(applicationId: string, values: HouseholdForm, signal: AbortSignal) {
+    return updateSection(applicationId, "household", values, signal);
+  },
+  async getEducation(applicationId: string) {
+    await sleep(250);
+    return structuredClone(getApplication(applicationId).education);
+  },
+  saveEducation(applicationId: string, values: EducationForm, signal: AbortSignal) {
+    return updateSection(applicationId, "education", values, signal);
   },
 };
