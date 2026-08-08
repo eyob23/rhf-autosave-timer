@@ -38,12 +38,15 @@ export function createSectionController<T extends FieldValues>({
   let revision = 0;
   let savedRevision = 0;
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  let countdownTimer: ReturnType<typeof setInterval> | null = null;
   let inFlight: Promise<void> | null = null;
   let abortController: AbortController | null = null;
   let snapshot: AutoSaveSnapshot = {
     status: "idle",
     hasUnsavedChanges: false,
     lastSavedAt: null,
+    autoSaveRemainingMs: null,
+    autoSaveProgress: 0,
     error: null,
   };
 
@@ -57,6 +60,8 @@ export function createSectionController<T extends FieldValues>({
       next.status !== snapshot.status ||
       next.hasUnsavedChanges !== snapshot.hasUnsavedChanges ||
       next.lastSavedAt !== snapshot.lastSavedAt ||
+      next.autoSaveRemainingMs !== snapshot.autoSaveRemainingMs ||
+      next.autoSaveProgress !== snapshot.autoSaveProgress ||
       next.error !== snapshot.error;
     snapshot = next;
     if (changed) emit();
@@ -67,6 +72,11 @@ export function createSectionController<T extends FieldValues>({
       clearTimeout(debounceTimer);
       debounceTimer = null;
     }
+    if (countdownTimer !== null) {
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+    }
+    setSnapshot({ autoSaveRemainingMs: null, autoSaveProgress: 0 });
   };
 
   const updateDirtySnapshot = () => {
@@ -122,8 +132,22 @@ export function createSectionController<T extends FieldValues>({
 
   const scheduleSave = () => {
     cancelDebounce();
+    const dueAt = Date.now() + debounceMs;
+    setSnapshot({ autoSaveRemainingMs: debounceMs, autoSaveProgress: 0 });
+    countdownTimer = setInterval(() => {
+      const remaining = Math.max(0, dueAt - Date.now());
+      setSnapshot({
+        autoSaveRemainingMs: remaining,
+        autoSaveProgress: Math.min(1, (debounceMs - remaining) / debounceMs),
+      });
+    }, 250);
     debounceTimer = setTimeout(() => {
       debounceTimer = null;
+      if (countdownTimer !== null) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+      }
+      setSnapshot({ autoSaveRemainingMs: null, autoSaveProgress: 0 });
       void saveLatest()
         .then(() => {
           // If edits happened while the request was in flight, persist the newest snapshot.
@@ -169,6 +193,8 @@ export function createSectionController<T extends FieldValues>({
         status: "idle",
         hasUnsavedChanges: false,
         lastSavedAt: null,
+        autoSaveRemainingMs: null,
+        autoSaveProgress: 0,
         error: null,
       });
       initialized = true;

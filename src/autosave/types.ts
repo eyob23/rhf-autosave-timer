@@ -4,6 +4,8 @@ export type AutoSaveSnapshot = {
   status: SaveStatus;
   hasUnsavedChanges: boolean;
   lastSavedAt: Date | null;
+  autoSaveRemainingMs: number | null;
+  autoSaveProgress: number;
   error: unknown | null;
 };
 
