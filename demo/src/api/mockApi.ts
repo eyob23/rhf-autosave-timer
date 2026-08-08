@@ -113,24 +113,28 @@ const createApplication = (
   household: {
     maritalStatus: "single",
     housingStatus: "rent",
-    members: [{
-      id: crypto.randomUUID(),
-      name: `${firstName} ${lastName}`,
-      relationship: "Self",
-      dateOfBirth: "1990-06-15",
-      dependent: false,
-    }],
+    members: [
+      {
+        id: crypto.randomUUID(),
+        name: `${firstName} ${lastName}`,
+        relationship: "Self",
+        dateOfBirth: "1990-06-15",
+        dependent: false,
+      },
+    ],
   },
   education: {
     highestLevel: "bachelors",
     currentlyStudying: false,
-    entries: [{
-      id: crypto.randomUUID(),
-      institution: "University of London",
-      qualification: "Bachelor of Science",
-      fieldOfStudy: "Computer Science",
-      graduationYear: 2012,
-    }],
+    entries: [
+      {
+        id: crypto.randomUUID(),
+        institution: "University of London",
+        qualification: "Bachelor of Science",
+        fieldOfStudy: "Computer Science",
+        graduationYear: 2012,
+      },
+    ],
   },
 });
 
@@ -153,7 +157,8 @@ let database = loadDatabase();
 
 const getApplication = (applicationId: string) => {
   const application = database[applicationId];
-  if (!application) throw new Error(`Application ${applicationId} was not found`);
+  if (!application)
+    throw new Error(`Application ${applicationId} was not found`);
   return application;
 };
 
@@ -179,35 +184,52 @@ const updateSection = async <K extends SectionName>(
 export const api = {
   async getSummary(applicationId: string) {
     await sleep(150);
-    const { id, reference, applicantName, status } = getApplication(applicationId);
+    const { id, reference, applicantName, status } =
+      getApplication(applicationId);
     return { id, reference, applicantName, status };
   },
   async getPersonal(applicationId: string) {
     await sleep(250);
     return structuredClone(getApplication(applicationId).personal);
   },
-  savePersonal(applicationId: string, values: PersonalForm, signal: AbortSignal) {
+  savePersonal(
+    applicationId: string,
+    values: PersonalForm,
+    signal: AbortSignal,
+  ) {
     return updateSection(applicationId, "personal", values, signal);
   },
   async getEmployment(applicationId: string) {
     await sleep(250);
     return structuredClone(getApplication(applicationId).employment);
   },
-  saveEmployment(applicationId: string, values: EmploymentForm, signal: AbortSignal) {
+  saveEmployment(
+    applicationId: string,
+    values: EmploymentForm,
+    signal: AbortSignal,
+  ) {
     return updateSection(applicationId, "employment", values, signal);
   },
   async getHousehold(applicationId: string) {
     await sleep(250);
     return structuredClone(getApplication(applicationId).household);
   },
-  saveHousehold(applicationId: string, values: HouseholdForm, signal: AbortSignal) {
+  saveHousehold(
+    applicationId: string,
+    values: HouseholdForm,
+    signal: AbortSignal,
+  ) {
     return updateSection(applicationId, "household", values, signal);
   },
   async getEducation(applicationId: string) {
     await sleep(250);
     return structuredClone(getApplication(applicationId).education);
   },
-  saveEducation(applicationId: string, values: EducationForm, signal: AbortSignal) {
+  saveEducation(
+    applicationId: string,
+    values: EducationForm,
+    signal: AbortSignal,
+  ) {
     return updateSection(applicationId, "education", values, signal);
   },
 };

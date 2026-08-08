@@ -13,8 +13,4 @@ export { RegistryContext, useRegistry } from "./RegistryContext";
 export { useAutosaveSection } from "./useAutosaveSection";
 export type { AutosaveSectionOptions } from "./useAutosaveSection";
 export { useControllerSnapshot } from "./useControllerSnapshot";
-export type {
-  AutoSaveSnapshot,
-  SaveStatus,
-  SectionController,
-} from "./types";
+export type { AutoSaveSnapshot, SaveStatus, SectionController } from "./types";
