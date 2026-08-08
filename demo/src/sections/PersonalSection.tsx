@@ -1,9 +1,8 @@
 import type { PersonalForm } from "../api/mockApi";
 import { applicationApi, runApiRequest } from "../api/service";
 import { store } from "../store";
-import { AutoSaveStatus } from "../components/AutoSaveStatus";
-import { NavigationGuard } from "../components/NavigationGuard";
-import { useAutosaveSection } from "../autosave/useAutosaveSection";
+import { AutoSaveStatus, useAutosaveSection } from "rhf-autosave";
+import { NavigationGuard } from "rhf-autosave/react-router";
 
 const loadPersonal = (signal: AbortSignal) =>
   runApiRequest(

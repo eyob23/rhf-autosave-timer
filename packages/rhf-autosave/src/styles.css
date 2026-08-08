@@ -1,0 +1,19 @@
+.save-status { min-width: 240px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; color: #5d687e; font-size: 13px; }
+.save-status__dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.save-status__text { display: grid; gap: 4px; min-width: 112px; }
+.save-status__countdown { display: flex; align-items: center; gap: 6px; color: #68738a; font-size: 11px; white-space: nowrap; }
+.save-status__countdown progress { width: 54px; height: 4px; border: 0; border-radius: 2px; overflow: hidden; background: #e4e8f0; }
+.save-status__countdown progress::-webkit-progress-bar { background: #e4e8f0; }
+.save-status__countdown progress::-webkit-progress-value { background: #7586b5; }
+.save-status__countdown progress::-moz-progress-bar { background: #7586b5; }
+.save-status--saving { color: #735f16; }
+.save-status--saved { color: #25633d; }
+.save-status--error { color: #a13434; }
+.save-status__button { min-width: 58px; border: 1px solid #c7cfdd; border-radius: 6px; background: #fff; color: #34405a; cursor: pointer; padding: 6px 10px; font-weight: 650; }
+.save-status__button:hover:not(:disabled) { background: #f3f6fb; border-color: #aeb8ca; }
+.save-status__button:focus-visible { outline: 3px solid rgba(117,134,181,.22); outline-offset: 2px; }
+.save-status__button:disabled { cursor: not-allowed; opacity: .5; }
+
+@media (max-width: 760px) {
+  .save-status { justify-content: flex-start; }
+}

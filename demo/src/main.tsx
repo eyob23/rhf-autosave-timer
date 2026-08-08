@@ -11,6 +11,7 @@ import { WizardLayout } from "./App";
 import { PersonalSection } from "./sections/PersonalSection";
 import { EmploymentSection } from "./sections/EmploymentSection";
 import { RouteErrorBoundary } from "./components/RouteErrorBoundary";
+import "rhf-autosave/styles.css";
 import "./styles.css";
 
 const router = createBrowserRouter([

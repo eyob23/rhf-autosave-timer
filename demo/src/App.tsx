@@ -1,8 +1,10 @@
 import { useMemo } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { AppExitGuard } from "./components/AppExitGuard";
-import { RegistryContext } from "./autosave/RegistryContext";
-import { createFormRegistry } from "./autosave/registry";
+import {
+  AppExitGuard,
+  RegistryContext,
+  createFormRegistry,
+} from "rhf-autosave";
 
 export function WizardLayout() {
   const registry = useMemo(() => createFormRegistry(), []);

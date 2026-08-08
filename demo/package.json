@@ -1,0 +1,20 @@
+{
+  "name": "rhf-autosave-demo",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@reduxjs/toolkit": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-hook-form": "^7.83.0",
+    "react-redux": "latest",
+    "react-router-dom": "^7.18.1",
+    "rhf-autosave": "1.0.0"
+  }
+}

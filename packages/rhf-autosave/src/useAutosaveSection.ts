@@ -3,7 +3,7 @@ import type { DefaultValues, FieldValues } from "react-hook-form";
 import { createSectionController } from "./createSectionController";
 import { useRegistry } from "./RegistryContext";
 
-type AutosaveSectionOptions<T extends FieldValues> = {
+export type AutosaveSectionOptions<T extends FieldValues> = {
   id: string;
   defaultValues: DefaultValues<T>;
   load(signal: AbortSignal): Promise<T>;

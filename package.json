@@ -1,26 +1,22 @@
 {
-  "name": "rhf-autosave-production-example",
+  "name": "rhf-autosave-workspace",
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "workspaces": [
+    "packages/*",
+    "demo"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@vitejs/plugin-react": "latest",
-    "vite": "latest",
-    "typescript": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "react-hook-form": "^7.83.0",
-    "react-router-dom": "^7.18.1",
-    "@reduxjs/toolkit": "latest",
-    "react-redux": "latest"
+    "dev": "npm run build -w rhf-autosave && npm run dev -w rhf-autosave-demo",
+    "build": "npm run build -w rhf-autosave && npm run build -w rhf-autosave-demo",
+    "preview": "npm run preview -w rhf-autosave-demo"
   },
   "devDependencies": {
     "@types/react": "latest",
-    "@types/react-dom": "latest"
+    "@types/react-dom": "latest",
+    "@vitejs/plugin-react": "latest",
+    "typescript": "latest",
+    "vite": "latest"
   }
 }

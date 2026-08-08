@@ -1,0 +1,39 @@
+{
+  "name": "rhf-autosave",
+  "version": "1.0.0",
+  "description": "Section-based whole-form autosave controllers for React Hook Form",
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./react-router": {
+      "types": "./dist/react-router.d.ts",
+      "import": "./dist/react-router.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.json",
+    "prepack": "npm run build"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-hook-form": ">=7.55",
+    "react-router-dom": ">=6.4"
+  },
+  "peerDependenciesMeta": {
+    "react-router-dom": {
+      "optional": true
+    }
+  }
+}

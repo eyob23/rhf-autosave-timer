@@ -1,5 +1,5 @@
-import type { SectionController } from "../autosave/types";
-import { useControllerSnapshot } from "../autosave/useControllerSnapshot";
+import { useControllerSnapshot } from "../useControllerSnapshot";
+import type { SectionController } from "../types";
 
 export function AutoSaveStatus<T>({
   controller,

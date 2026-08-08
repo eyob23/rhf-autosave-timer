@@ -1,6 +1,13 @@
-# React Hook Form Autosave — production pattern
+# React Hook Form Autosave - package and demo
 
-A working example of section-based autosave using:
+This npm workspace separates the reusable autosave implementation from its example application:
+
+```text
+packages/rhf-autosave/  Publishable React Hook Form autosave package
+demo/                   Vite, React Router, Redux, and RTK Query example
+```
+
+The package provides section-based autosave using:
 
 - React Hook Form `createFormControl()`
 - RHF `subscribe()` for change detection without rerendering the section
@@ -9,15 +16,15 @@ A working example of section-based autosave using:
 - One in-flight request per section
 - A reusable `useAutosaveSection()` hook for loading, registration, and cleanup
 - A dynamic registry keyed by section ID
-- `flush()` before React Router SPA navigation via `useBlocker`
-- `beforeunload` protection for reload/tab close
-- `visibilitychange` best-effort flush for mobile/backgrounding
 - `useSyncExternalStore` for isolated save notifications
 - retry on save failure
-- manual save with a visible debounce countdown
-- RTK Query dispatch without mutation hooks in the form component
+- `AutoSaveStatus` with manual save and a visible debounce countdown
+- `AppExitGuard` for browser exit and visibility handling
+- optional `NavigationGuard` integration for React Router
 
 Each section owns one RHF controller and saves its complete value snapshot. The section is the persistence and concurrency boundary; this pattern intentionally does not generate field-level patches.
+
+The demo adds its form fields, routing layout, route error boundary, Redux, and RTK Query integration. The autosave status UI and lifecycle guards come from `rhf-autosave`.
 
 ## Run
 
@@ -28,9 +35,32 @@ npm run dev
 
 Then open the Vite URL and edit either section. The mock API waits ~650ms so the save-state transitions are visible.
 
+`npm run build` builds the package first and then verifies that the demo consumes its public exports.
+
+## Package
+
+The package is named `rhf-autosave` and declares React and React Hook Form as peer dependencies. Its public exports include:
+
+- `createSectionController()`
+- `useAutosaveSection()`
+- `createFormRegistry()` and `RegistryContext`
+- `useControllerSnapshot()`
+- `AutoSaveStatus` and `AppExitGuard`
+- `NavigationGuard` from `rhf-autosave/react-router`
+- component styles from `rhf-autosave/styles.css`
+- controller, snapshot, registry, and option types
+
+Build only the package with:
+
+```bash
+npm run build -w rhf-autosave
+```
+
+See `packages/rhf-autosave/README.md` for package usage.
+
 ## RTK Query
 
-The demo already uses RTK Query. Each section provides stable `load` and `save` functions to `useAutosaveSection()`. Those functions dispatch endpoint `initiate()` actions and pass the result through `runApiRequest()`, which connects the controller's `AbortSignal`, awaits `.unwrap()`, and unsubscribes query requests. Replace `src/api/service.ts`'s mock `queryFn` endpoints with your real `fetchBaseQuery` or custom base query endpoints.
+The demo uses RTK Query. Each section provides stable `load` and `save` functions to `useAutosaveSection()`. Those functions dispatch endpoint `initiate()` actions and pass the result through the demo's `runApiRequest()` adapter, which connects the controller's `AbortSignal`, awaits `.unwrap()`, and unsubscribes query requests. Replace `demo/src/api/service.ts`'s mock `queryFn` endpoints with your real `fetchBaseQuery` or custom base query endpoints.
 
 ## Adding a section
 

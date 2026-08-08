@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type { FormRegistry } from "../autosave/registry";
+import type { FormRegistry } from "../registry";
 
 export function AppExitGuard({ registry }: { registry: FormRegistry }) {
   useEffect(() => {
