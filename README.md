@@ -7,12 +7,17 @@ A working example of section-based autosave using:
 - Debounced whole-section saves
 - Revision tracking to handle edits while a save is in flight
 - One in-flight request per section
+- A reusable `useAutosaveSection()` hook for loading, registration, and cleanup
+- A dynamic registry keyed by section ID
 - `flush()` before React Router SPA navigation via `useBlocker`
 - `beforeunload` protection for reload/tab close
 - `visibilitychange` best-effort flush for mobile/backgrounding
 - `useSyncExternalStore` for isolated save notifications
 - retry on save failure
-- RTK Query dispatch from the external controller (no mutation hook in the form component)
+- manual save with a visible debounce countdown
+- RTK Query dispatch without mutation hooks in the form component
+
+Each section owns one RHF controller and saves its complete value snapshot. The section is the persistence and concurrency boundary; this pattern intentionally does not generate field-level patches.
 
 ## Run
 
@@ -25,7 +30,13 @@ Then open the Vite URL and edit either section. The mock API waits ~650ms so the
 
 ## RTK Query
 
-The demo already uses RTK Query. `src/autosave/registry.ts` dispatches endpoint `initiate()` actions directly from the external autosave controller and awaits `.unwrap()`. Replace `src/api/service.ts`'s mock `queryFn` endpoints with your real `fetchBaseQuery`/custom base query endpoints.
+The demo already uses RTK Query. Each section provides stable `load` and `save` functions to `useAutosaveSection()`. Those functions dispatch endpoint `initiate()` actions and pass the result through `runApiRequest()`, which connects the controller's `AbortSignal`, awaits `.unwrap()`, and unsubscribes query requests. Replace `src/api/service.ts`'s mock `queryFn` endpoints with your real `fetchBaseQuery` or custom base query endpoints.
+
+## Adding a section
+
+Create a section component, define its full-value type and stable `load` and `save` functions, then call `useAutosaveSection()` with a unique ID and default values. The hook creates the RHF controller, initializes loaded values, registers it for app-exit handling, and disposes it when the section is actually unmounted.
+
+The dynamic registry also exposes `flush(id)` and `flushAll()` for workflow-level actions. Only mounted sections are registered; route navigation flushes a dirty section before it unmounts.
 
 ## Why revision tracking instead of `formState.isDirty`?
 
@@ -43,4 +54,4 @@ This example uses `createBrowserRouter` + `RouterProvider` (React Router Data Mo
 
 ## React StrictMode note
 
-Do not permanently dispose a `createFormControl` registry from a normal component effect cleanup if the same controller instance is reused. React StrictMode performs a development-only setup/cleanup/setup cycle. In a real application, scope the registry to the request/workflow owner and dispose it only when that owner is actually discarded.
+React StrictMode performs a development-only setup/cleanup/setup cycle. `useAutosaveSection()` defers request cancellation and controller disposal by one microtask so the replacement setup can retain the same controller. A real unmount still cancels the load request, unregisters the section, and disposes its controller.

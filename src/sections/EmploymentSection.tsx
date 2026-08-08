@@ -1,38 +1,44 @@
-import { useEffect, useState } from "react";
-import { applicationApi } from "../api/service";
+import type { EmploymentForm } from "../api/mockApi";
+import { applicationApi, runApiRequest } from "../api/service";
 import { store } from "../store";
 import { AutoSaveStatus } from "../components/AutoSaveStatus";
 import { NavigationGuard } from "../components/NavigationGuard";
-import { useRegistry } from "../autosave/RegistryContext";
+import { useAutosaveSection } from "../autosave/useAutosaveSection";
+
+const loadEmployment = (signal: AbortSignal) =>
+  runApiRequest(
+    store.dispatch(applicationApi.endpoints.getEmployment.initiate()),
+    signal,
+  );
+
+const saveEmployment = (values: EmploymentForm, signal: AbortSignal) =>
+  runApiRequest(
+    store.dispatch(applicationApi.endpoints.updateEmployment.initiate(values)),
+    signal,
+  );
 
 export function EmploymentSection() {
-  const { employment } = useRegistry();
-  const [ready, setReady] = useState(false);
+  const { controller, form, ready, loadError } = useAutosaveSection<EmploymentForm>({
+    id: "employment",
+    defaultValues: { employer: "", title: "", years: 0 },
+    load: loadEmployment,
+    save: saveEmployment,
+  });
 
-  useEffect(() => {
-    let active = true;
-    const request = store.dispatch(applicationApi.endpoints.getEmployment.initiate());
-    void request.unwrap().then((data) => {
-      if (!active) return;
-      employment.initialize(data);
-      setReady(true);
-    });
-    return () => { active = false; request.unsubscribe(); };
-  }, [employment]);
-
+  if (loadError) return <p role="alert">Could not load section.</p>;
   if (!ready) return <p>Loading section…</p>;
 
   return (
     <section className="card">
-      <NavigationGuard controller={employment} />
+      <NavigationGuard controller={controller} />
       <header className="card__header">
         <div><p className="eyebrow">Section 2</p><h2>Employment</h2></div>
-        <AutoSaveStatus controller={employment} />
+        <AutoSaveStatus controller={controller} />
       </header>
       <form className="form-grid" onSubmit={(e) => e.preventDefault()}>
-        <label>Employer<input {...employment.form.register("employer")} /></label>
-        <label>Title<input {...employment.form.register("title")} /></label>
-        <label>Years<input type="number" {...employment.form.register("years", { valueAsNumber: true })} /></label>
+        <label>Employer<input {...form.register("employer")} /></label>
+        <label>Title<input {...form.register("title")} /></label>
+        <label>Years<input type="number" {...form.register("years", { valueAsNumber: true })} /></label>
       </form>
     </section>
   );

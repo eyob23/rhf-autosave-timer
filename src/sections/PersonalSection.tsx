@@ -1,38 +1,44 @@
-import { useEffect, useState } from "react";
-import { applicationApi } from "../api/service";
+import type { PersonalForm } from "../api/mockApi";
+import { applicationApi, runApiRequest } from "../api/service";
 import { store } from "../store";
 import { AutoSaveStatus } from "../components/AutoSaveStatus";
 import { NavigationGuard } from "../components/NavigationGuard";
-import { useRegistry } from "../autosave/RegistryContext";
+import { useAutosaveSection } from "../autosave/useAutosaveSection";
+
+const loadPersonal = (signal: AbortSignal) =>
+  runApiRequest(
+    store.dispatch(applicationApi.endpoints.getPersonal.initiate()),
+    signal,
+  );
+
+const savePersonal = (values: PersonalForm, signal: AbortSignal) =>
+  runApiRequest(
+    store.dispatch(applicationApi.endpoints.updatePersonal.initiate(values)),
+    signal,
+  );
 
 export function PersonalSection() {
-  const { personal } = useRegistry();
-  const [ready, setReady] = useState(false);
+  const { controller, form, ready, loadError } = useAutosaveSection<PersonalForm>({
+    id: "personal",
+    defaultValues: { firstName: "", lastName: "", email: "" },
+    load: loadPersonal,
+    save: savePersonal,
+  });
 
-  useEffect(() => {
-    let active = true;
-    const request = store.dispatch(applicationApi.endpoints.getPersonal.initiate());
-    void request.unwrap().then((data) => {
-      if (!active) return;
-      personal.initialize(data);
-      setReady(true);
-    });
-    return () => { active = false; request.unsubscribe(); };
-  }, [personal]);
-
+  if (loadError) return <p role="alert">Could not load section.</p>;
   if (!ready) return <p>Loading section…</p>;
 
   return (
     <section className="card">
-      <NavigationGuard controller={personal} />
+      <NavigationGuard controller={controller} />
       <header className="card__header">
         <div><p className="eyebrow">Section 1</p><h2>Personal information</h2></div>
-        <AutoSaveStatus controller={personal} />
+        <AutoSaveStatus controller={controller} />
       </header>
       <form className="form-grid" onSubmit={(e) => e.preventDefault()}>
-        <label>First name<input {...personal.form.register("firstName")} /></label>
-        <label>Last name<input {...personal.form.register("lastName")} /></label>
-        <label className="full">Email<input type="email" {...personal.form.register("email")} /></label>
+        <label>First name<input {...form.register("firstName")} /></label>
+        <label>Last name<input {...form.register("lastName")} /></label>
+        <label className="full">Email<input type="email" {...form.register("email")} /></label>
       </form>
     </section>
   );

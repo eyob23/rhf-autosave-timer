@@ -7,11 +7,6 @@ import { createFormRegistry } from "./autosave/registry";
 export function WizardLayout() {
   const registry = useMemo(() => createFormRegistry(), []);
 
-  // Do not dispose this registry from an effect cleanup. In React StrictMode,
-  // development effects run setup -> cleanup -> setup, which would permanently
-  // dispose an external controller that is intentionally reused across the remount.
-  // Scope/dispose registries at the request/workflow owner boundary in the real app.
-
   return (
     <RegistryContext.Provider value={registry}>
       <AppExitGuard registry={registry} />

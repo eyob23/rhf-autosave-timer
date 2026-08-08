@@ -1,53 +1,31 @@
-import type { EmploymentForm, PersonalForm } from "../api/mockApi";
-import { applicationApi } from "../api/service";
-import { store } from "../store";
-import { createSectionController } from "./createSectionController";
+import type { SectionController } from "./types";
 
 export function createFormRegistry() {
-  const personal = createSectionController<PersonalForm>({
-    defaultValues: { firstName: "", lastName: "", email: "" },
-    save: async (values, signal) => {
-      const request = store.dispatch(
-        applicationApi.endpoints.updatePersonal.initiate(values),
-      );
-
-      const abort = () => request.abort();
-      signal.addEventListener("abort", abort, { once: true });
-
-      try {
-        await request.unwrap();
-      } finally {
-        signal.removeEventListener("abort", abort);
-      }
-    },
-  });
-
-  const employment = createSectionController<EmploymentForm>({
-    defaultValues: { employer: "", title: "", years: 0 },
-    save: async (values, signal) => {
-      const request = store.dispatch(
-        applicationApi.endpoints.updateEmployment.initiate(values),
-      );
-
-      const abort = () => request.abort();
-      signal.addEventListener("abort", abort, { once: true });
-
-      try {
-        await request.unwrap();
-      } finally {
-        signal.removeEventListener("abort", abort);
-      }
-    },
-  });
-
-  const controllers = { personal, employment };
+  type RegisteredController = Pick<
+    SectionController<unknown>,
+    "flush" | "flushBestEffort" | "hasUnsavedChanges"
+  >;
+  const controllers = new Map<string, RegisteredController>();
 
   return {
-    ...controllers,
-    getAll: () => Object.values(controllers),
+    register<T>(id: string, controller: SectionController<T>) {
+      if (controllers.has(id)) {
+        throw new Error(`Autosave section "${id}" is already registered`);
+      }
+      controllers.set(id, controller);
+      return () => {
+        if (controllers.get(id) === controller) controllers.delete(id);
+      };
+    },
+    getAll: () => [...controllers.values()],
+    flush: async (id: string) => {
+      await controllers.get(id)?.flush();
+    },
+    flushAll: async () => {
+      await Promise.all([...controllers.values()].map((controller) => controller.flush()));
+    },
     hasUnsavedChanges: () =>
-      Object.values(controllers).some((controller) => controller.hasUnsavedChanges()),
-    dispose: () => Object.values(controllers).forEach((controller) => controller.dispose()),
+      [...controllers.values()].some((controller) => controller.hasUnsavedChanges()),
   };
 }
 

@@ -1,6 +1,28 @@
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 import { api as mockApi, type EmploymentForm, type PersonalForm } from "./mockApi";
 
+type AbortableRequest<T> = {
+  abort(): void;
+  unwrap(): Promise<T>;
+  unsubscribe?: () => void;
+};
+
+export async function runApiRequest<T>(
+  request: AbortableRequest<T>,
+  signal: AbortSignal,
+) {
+  const abort = () => request.abort();
+  if (signal.aborted) abort();
+  else signal.addEventListener("abort", abort, { once: true });
+
+  try {
+    return await request.unwrap();
+  } finally {
+    signal.removeEventListener("abort", abort);
+    request.unsubscribe?.();
+  }
+}
+
 export const applicationApi = createApi({
   reducerPath: "applicationApi",
   baseQuery: fakeBaseQuery<Error>(),
